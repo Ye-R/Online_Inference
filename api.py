@@ -29,7 +29,6 @@ inference_NN = load(MODEL_PATH_NN)
 app = Flask(__name__)
 
 # API 1
-# Flask route so that we can serve HTTP traffic on that route
 @app.route('/line/<Line>')
 # Get data from json and return the requested row defined by the variable Line
 def line(Line):
@@ -42,7 +41,7 @@ def line(Line):
 # API 2
 # Flask route so that we can serve HTTP traffic on that route
 @app.route('/prediction/<int:Line>',methods=['POST', 'GET'])
-# Return prediction for both Neural Network and LDA inference model with the requested row as input
+# Return prediction for machine learning models
 def prediction(Line):
     data = pd.read_json('./test.json')
     data_test = data.transpose()
@@ -55,12 +54,22 @@ def prediction(Line):
     clf_nn = load(MODEL_PATH_NN)
     prediction_nn = clf_nn.predict(X_test)
     
-    return {'prediction LDA': int(prediction_lda), 'prediction Neural Network': int(prediction_nn)}
+    clf_svm = load(MODEL_PATH_SVM)
+    prediction_knn = clf_svm.predict(X_test)
+    
+    clf_knn = load(MODEL_PATH_KNN)
+    prediction_knn = clf_knn.predict(X_test)
+    
+    return {'prediction K-Nearest Neighbor' : int(prediction_knn),
+            'prediction LDA': int(prediction_lda), 
+            'prediction Neural Network': int(prediction_nn)
+            'prediction Support Vector Classifier': int(prediction_svm)
+           }
 
 # API 3
 # Flask route so that we can serve HTTP traffic on that route
 @app.route('/score',methods=['POST', 'GET'])
-# Return classification score for both Neural Network and LDA inference model from the all dataset provided
+# Return classification score for machine learning models
 def score():
 
     data = pd.read_json('./test.json')
@@ -74,8 +83,17 @@ def score():
     clf_nn = load(MODEL_PATH_NN)
     score_nn = clf_nn.score(X_test, y_test)
     
-    return {'Score LDA': score_lda, 'Score Neural Network': score_nn}
-
+    clf_knn = load(MODEL_PATH_KNN)
+    score_knn = clf_lda.score(X_test, y_test)
+    
+    clf_svm = load(MODEL_PATH_SVM)
+    score_svm = clf_nn.score(X_test, y_test)
+    
+    return {'Score K-Nearest Neighbor': score_knn,
+            'Score LDA': score_lda, 
+            'Score Neural Network': score_nn
+            'Score Support Vector Classifier': score_svm
+           }
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
     
